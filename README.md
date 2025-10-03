@@ -83,6 +83,17 @@ When you are ready to try it in production, read [here](https://cartography-cncf
 
 ## Usage
 
+### Running rules
+
+You can check your environment against common security frameworks using the `cartography-rules` command.
+
+```bash
+cartography-rules run all
+```
+
+See [the rules docs](https://cartography-cncf.github.io/cartography/usage/rules.html) for more detail.
+
+
 ### Querying the database directly
 
 ![poweruser.png](docs/root/images/poweruser.png)

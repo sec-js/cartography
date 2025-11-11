@@ -59,6 +59,7 @@ dependencies = [
     "azure-mgmt-cosmosdb>=6.0.0",
     "azure-mgmt-web>=7.0.0",
     "azure-mgmt-logic>=10.0.0",
+    "azure-mgmt-network>=25.0.0",
     "azure-mgmt-security>=5.0.0",
     "azure-mgmt-monitor>=3.0.0",
     "msrestazure >= 0.6.4",
@@ -99,6 +100,7 @@ dev = [
     "azure-mgmt-web>=7.0.0",
     "azure-mgmt-logic>=10.0.0",
     "azure-mgmt-containerinstance>=10.0.0",
+    "azure-mgmt-network>=25.0.0",
     "azure-mgmt-security>=5.0.0",
     "azure-mgmt-monitor>=3.0.0",
 ]

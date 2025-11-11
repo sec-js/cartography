@@ -15,6 +15,7 @@ from . import data_lake
 from . import functions
 from . import logic_apps
 from . import monitor
+from . import network
 from . import permission_relationships
 from . import rbac
 from . import resource_groups
@@ -107,6 +108,13 @@ def _sync_one_subscription(
         common_job_parameters,
     )
     data_lake.sync(
+        neo4j_session,
+        credentials,
+        subscription_id,
+        update_tag,
+        common_job_parameters,
+    )
+    network.sync(
         neo4j_session,
         credentials,
         subscription_id,

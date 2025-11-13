@@ -1284,30 +1284,54 @@ Representation of an [Azure Resource Group](https://learn.microsoft.com/en-us/re
     (AzureSubscription)-[RESOURCE]->(:AzureResourceGroup)
     ```
 
-### AzureDataLakeFileSystem
+### AzureKubernetesCluster
 
-Representation of an [Azure Data Lake File System](https://learn.microsoft.com/en-us/rest/api/storagerp/blob-containers/get), which is a container within a Data Lake enabled Storage Account.
+Representation of an [Azure Kubernetes Service Cluster](https://learn.microsoft.com/en-us/rest/api/aks/managed-clusters/get).
 
 | Field | Description |
 |---|---|
 |firstseen| Timestamp of when a sync job discovered this node|
 |lastupdated| Timestamp of the last time the node was updated|
-|**id**| The full resource ID of the File System. |
-|name| The name of the File System. |
-|public_access| The public access level of the File System (e.g., None). |
-|last_modified_time| The timestamp of when the File System was last modified. |
-|has_immutability_policy| A boolean indicating if the data is protected from being changed or deleted. |
-|has_legal_hold| A boolean indicating if the data is locked for legal reasons. |
+|**id**| The full resource ID of the AKS Cluster. |
+|name| The name of the AKS Cluster. |
+|location| The Azure region where the Cluster is deployed. |
+|provisioning_state| The deployment status of the Cluster (e.g., Succeeded). |
+|kubernetes_version| The version of Kubernetes the Cluster is running. |
+|fqdn| The fully qualified domain name of the Cluster's API server. |
+
+#### Relationships
+
+- An Azure Kubernetes Cluster is a resource within an Azure Subscription.
+    ```cypher
+    (AzureSubscription)-[:RESOURCE]->(:AzureKubernetesCluster)
+    ```
+
+### AzureKubernetesAgentPool
+
+Representation of an [Azure Kubernetes Service Agent Pool](https://learn.microsoft.com/en-us/rest/api/aks/agent-pools/get).
+
+| Field | Description |
+|---|---|
+|firstseen| Timestamp of when a sync job discovered this node|
+|lastupdated| Timestamp of the last time the node was updated|
+|**id**| The full resource ID of the Agent Pool. |
+|name| The name of the Agent Pool. |
+|provisioning_state| The deployment status of the Agent Pool (e.g., Succeeded). |
+|vm_size| The size of the virtual machines in the pool. |
+|os_type| The operating system of the nodes (e.g., Linux). |
+|count| The number of virtual machines in the pool. |
+
+#### Relationships
+
+- An Azure Kubernetes Cluster has one or more Agent Pools.
+    ```cypher
+    (AzureKubernetesCluster)-[:HAS_AGENT_POOL]->(:AzureKubernetesAgentPool)
+    ```
 
 ### AzureContainerInstance
 
 Representation of an [Azure Container Instance](https://learn.microsoft.com/en-us/rest/api/container-instances/container-groups/get).
 
-#### Relationships
-
-- An Azure Storage Account contains one or more File Systems.
-    ```cypher
-    (AzureStorageAccount)-[:CONTAINS]->(:AzureDataLakeFileSystem)
 |**id**| The full resource ID of the Container Instance. |
 |name| The name of the Container Instance. |
 |location| The Azure region where the Container Instance is deployed. |
@@ -1450,4 +1474,26 @@ Representation of an Azure Monitor [Metric Alert](https://learn.microsoft.com/en
   - An Azure Monitor Metric Alert is a resource within an Azure Subscription.
     ```cypher
     (AzureSubscription)-[:HAS_METRIC_ALERT]->(AzureMonitorMetricAlert)
+    ```
+
+### AzureDataLakeFileSystem
+
+Representation of an [Azure Data Lake File System](https://learn.microsoft.com/en-us/rest/api/storagerp/blob-containers/get), which is a container within a Data Lake enabled Storage Account.
+
+| Field | Description |
+|---|---|
+| firstseen | Timestamp of when a sync job discovered this node |
+| lastupdated | Timestamp of the last time the node was updated |
+| **id** | The full resource ID of the File System. |
+| name | The name of the File System. |
+| public_access | The public access level of the File System (e.g., None). |
+| last_modified_time | The timestamp of when the File System was last modified. |
+| has_immutability_policy | A boolean indicating if the data is protected from being changed or deleted. |
+| has_legal_hold | A boolean indicating if the data is locked for legal reasons. |
+
+#### Relationships
+
+- An Azure Storage Account contains one or more File Systems.
+    ```cypher
+    (AzureStorageAccount)-[:CONTAINS]->(:AzureDataLakeFileSystem)
     ```

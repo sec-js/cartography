@@ -19,6 +19,7 @@ from . import data_factory_pipeline
 from . import data_lake
 from . import event_grid
 from . import functions
+from . import load_balancers
 from . import logic_apps
 from . import monitor
 from . import network
@@ -170,6 +171,13 @@ def _sync_one_subscription(
         common_job_parameters,
     )
     network.sync(
+        neo4j_session,
+        credentials,
+        subscription_id,
+        update_tag,
+        common_job_parameters,
+    )
+    load_balancers.sync(
         neo4j_session,
         credentials,
         subscription_id,

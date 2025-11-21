@@ -1,3 +1,6 @@
+from cartography.rules.data.rules.cloud_security_product_deactivated import (
+    cloud_security_product_deactivated,
+)
 from cartography.rules.data.rules.compute_instance_exposed import (
     compute_instance_exposed,
 )
@@ -31,4 +34,5 @@ RULES = {
     policy_administration_privileges.id: policy_administration_privileges,
     unmanaged_accounts.id: unmanaged_accounts,
     workload_identity_admin_capabilities.id: workload_identity_admin_capabilities,
+    cloud_security_product_deactivated.id: cloud_security_product_deactivated,
 }

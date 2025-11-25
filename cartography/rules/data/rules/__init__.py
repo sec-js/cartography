@@ -16,6 +16,9 @@ from cartography.rules.data.rules.identity_administration_privileges import (
 from cartography.rules.data.rules.inactive_user_active_accounts import (
     inactive_user_active_accounts,
 )
+from cartography.rules.data.rules.malicious_npm_dependencies_shai_hulud import (
+    malicious_npm_dependencies_shai_hulud,
+)
 from cartography.rules.data.rules.mfa_missing import missing_mfa_rule
 from cartography.rules.data.rules.object_storage_public import object_storage_public
 from cartography.rules.data.rules.policy_administration_privileges import (
@@ -39,4 +42,5 @@ RULES = {
     unmanaged_accounts.id: unmanaged_accounts,
     workload_identity_admin_capabilities.id: workload_identity_admin_capabilities,
     cloud_security_product_deactivated.id: cloud_security_product_deactivated,
+    malicious_npm_dependencies_shai_hulud.id: malicious_npm_dependencies_shai_hulud,
 }

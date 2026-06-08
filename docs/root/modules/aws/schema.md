@@ -1268,6 +1268,8 @@ Representation of an [AWS Transit Gateway Attachment](https://docs.aws.amazon.co
 Representation of an [AWS CidrBlock used in VPC configuration](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpcCidrBlockAssociation.html).
 More information on https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-vpcs.html
 
+> **Ontology Mapping**: This node has the extra label `VirtualNetwork` and normalized `_ont_*` properties to enable cross-platform queries for virtual networks across different systems (e.g., GCPVpc, AzureVirtualNetwork).
+
 | Field | Description |
 |-------|-------------|
 |firstseen| Timestamp of when a sync job discovered this node|
@@ -2436,6 +2438,8 @@ Representation of an AWS EC2 [Security Group](https://docs.aws.amazon.com/AWSEC2
 ### EC2Subnet
 
 Representation of an AWS EC2 [Subnet](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Subnet.html).
+
+> **Ontology Mapping**: This node has the extra label `Subnet` and normalized `_ont_*` properties to enable cross-platform queries for network subnets across different systems (e.g., GCPSubnet, AzureSubnet).
 
 | Field | Description |
 |-------|-------------|
@@ -3830,6 +3834,8 @@ Representation of an AWS Relational Database Service [DBInstance](https://docs.a
 
 Representation of an AWS Relational Database Service [DBSnapshot](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DBSnapshot.html).
 
+> **Ontology Mapping**: This node has the extra label `Snapshot` and normalized `_ont_*` properties to enable cross-platform queries for volume/database snapshots across different systems (e.g., EBSSnapshot, AzureSnapshot, ScalewayVolumeSnapshot).
+
 | Field | Description |
 |-------|-------------|
 | firstseen| Timestamp of when a sync job first discovered this node  |
@@ -4710,6 +4716,8 @@ Representation of an AWS [EBS Volume](https://docs.aws.amazon.com/AWSEC2/latest/
 ### EBSSnapshot
 
 Representation of an AWS [EBS Snapshot](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html).
+
+> **Ontology Mapping**: This node has the extra label `Snapshot` and normalized `_ont_*` properties to enable cross-platform queries for volume/database snapshots across different systems (e.g., RDSSnapshot, AzureSnapshot, ScalewayVolumeSnapshot).
 
 | Field | Description |
 |-------|-------------|

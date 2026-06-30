@@ -24,6 +24,11 @@ PRJ -- RESOURCE --> IP(IP)
 PRJ -- RESOURCE --> LB(LoadBalancer)
 PRJ -- RESOURCE --> FE(LBFrontend)
 PRJ -- RESOURCE --> BE(LBBackend)
+PRJ -- RESOURCE --> DZ(DnsZone)
+PRJ -- RESOURCE --> DR(DnsRecord)
+PRJ -- RESOURCE --> SEC(Secret)
+PRJ -- RESOURCE --> SV(SecretVersion)
+PRJ -- RESOURCE --> KEY(Key)
 INS -- MOUNTS --> VOL
 INS -- MEMBER_OF_SCALEWAY_SECURITY_GROUP --> SG
 SGR -- MEMBER_OF_SCALEWAY_SECURITY_GROUP --> SG
@@ -35,6 +40,9 @@ SUB -- HAS --> IP
 LB -- HAS --> FE
 LB -- HAS --> BE
 FE -- ROUTES_TO --> BE
+DZ -- HAS_RECORD --> DR
+SEC -- HAS --> SV
+SEC -- ENCRYPTED_BY --> KEY
 USR -- MEMBER_OF --> GRP(ScalewayGroup)
 APIKEY(ScalewayApiKey) -- OWNED_BY --> USR
 APP -- MEMBER_OF --> GRP(ScalewayGroup)
@@ -807,4 +815,165 @@ A Backend defines a pool of servers and the forwarding / health-check configurat
 - A `LBFrontend` routes to a `LBBackend`
     ```
     (:ScalewayLBFrontend)-[:ROUTES_TO]->(:ScalewayLBBackend)
+    ```
+
+
+### ScalewayDnsZone
+
+Represents a DNS zone managed by Scaleway Domains & DNS. The zone's ID is composed from `{subdomain}.{domain}` (or just `{domain}` for apex zones), which is the value the Scaleway API itself uses as the zone path parameter.
+
+> **Ontology Mapping**: This node has the extra label `DNSZone` to enable cross-platform queries for DNS zones across different systems (e.g., AWSDNSZone, GCPDNSZone).
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Full zone name (`subdomain.domain` or `domain`). |
+| domain     | Apex domain of the zone.                     |
+| subdomain  | Subdomain within the apex (empty for the apex zone itself). |
+| status     | Zone status (`active`, `pending`, `error`, ...). |
+| message    | Status message returned by the API.          |
+| ns         | Authoritative name servers currently configured for the zone. |
+| ns_default | Default Scaleway name servers.               |
+| ns_master  | Master name servers.                         |
+| linked_products | Scaleway products linked to this zone.  |
+| updated_at | Zone last update date.                       |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `DnsZone` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayDnsZone)
+    ```
+
+
+### ScalewayDnsRecord
+
+Represents an individual DNS record within a `ScalewayDnsZone`.
+
+> **Ontology Mapping**: This node has the extra label `DNSRecord` to enable cross-platform queries for DNS records across different systems.
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Record unique ID.                            |
+| name       | Record name (relative to its zone).          |
+| type       | Record type (`a`, `aaaa`, `cname`, `mx`, ...). |
+| data       | Record data (target IP, hostname, value, ...). |
+| ttl        | Record TTL in seconds.                       |
+| priority   | Record priority (relevant for MX/SRV).       |
+| comment    | Free-form record comment.                    |
+| updated_at | Record last update date.                     |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `DnsRecord` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayDnsRecord)
+    ```
+- A `DnsZone` has `DnsRecord`s
+    ```
+    (:ScalewayDnsZone)-[:HAS_RECORD]->(:ScalewayDnsRecord)
+    ```
+
+
+### ScalewaySecret
+
+Represents a secret managed by Scaleway Secret Manager.
+
+> **Ontology Mapping**: This node has the extra label `Secret` to enable cross-platform queries for secrets across different systems (e.g., AWSSecret, GCPSecretManagerSecret).
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Secret unique ID.                            |
+| name       | Secret name.                                 |
+| status     | Secret status (`ready`, `locked`, ...).      |
+| type       | Secret type (`opaque`, `basic_credentials`, `ssh_key`, ...). |
+| path       | Folder path of the secret.                   |
+| tags       | Secret tags.                                 |
+| version_count | Number of versions on this secret.        |
+| managed    | True if the secret is managed by another Scaleway product. |
+| protected  | True if the secret is protected against deletion. |
+| description | Secret description.                         |
+| region     | Region the secret lives in.                  |
+| key_id     | ID of the Key Manager key encrypting this secret (if any). |
+| used_by    | Scaleway products using this secret.         |
+| deletion_requested_at | Timestamp when deletion was requested. |
+| created_at | Secret creation date.                        |
+| updated_at | Secret last update date.                     |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `Secret` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewaySecret)
+    ```
+- A `Secret` may be encrypted by a `Key`
+    ```
+    (:ScalewaySecret)-[:ENCRYPTED_BY]->(:ScalewayKey)
+    ```
+
+
+### ScalewaySecretVersion
+
+Represents a version of a `ScalewaySecret`. The version's ID is composed as `{secret_id}/{revision}` since Scaleway does not expose a provider-side version ID.
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | `{secret_id}/{revision}`.                    |
+| revision   | Monotonic revision number.                   |
+| status     | Version status (`enabled`, `disabled`, `destroyed`, ...). |
+| latest     | True if this version is the latest for its secret. |
+| description | Version description.                        |
+| region     | Region the version lives in.                 |
+| deletion_requested_at | Timestamp when deletion was requested. |
+| deleted_at | Deletion date (when the version is destroyed). |
+| created_at | Version creation date.                       |
+| updated_at | Version last update date.                    |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `SecretVersion` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewaySecretVersion)
+    ```
+- A `Secret` has `SecretVersion`s
+    ```
+    (:ScalewaySecret)-[:HAS]->(:ScalewaySecretVersion)
+    ```
+
+
+### ScalewayKey
+
+Represents a Scaleway Key Manager key.
+
+> **Ontology Mapping**: This node has the extra label `EncryptionKey` to enable cross-platform queries for encryption keys across different systems (e.g., AWSKMSKey, GCPCryptoKey).
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Key unique ID.                               |
+| name       | Key name.                                    |
+| description | Key description.                            |
+| state      | Key state (`enabled`, `disabled`, `pending_deletion`, ...). |
+| usage_type | Active key usage category (`symmetric_encryption`, `asymmetric_encryption`, `asymmetric_signing`). |
+| usage_algorithm | Algorithm corresponding to `usage_type` (e.g. `aes_256_gcm`). |
+| origin     | Key material origin (`scaleway_kms`, `external`).  |
+| region     | Region the key lives in.                     |
+| tags       | Key tags.                                    |
+| rotation_count | Number of times the key has been rotated. |
+| protected  | True if the key is protected against deletion. |
+| locked     | True if the key is locked.                   |
+| rotation_period | Automatic rotation period (ISO 8601 duration). |
+| rotation_next_at | Next scheduled rotation timestamp.      |
+| rotated_at | Last rotation date.                          |
+| deletion_requested_at | Timestamp when deletion was requested. |
+| created_at | Key creation date.                           |
+| updated_at | Key last update date.                        |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `Key` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayKey)
+    ```
+- A `Secret` may be encrypted by a `Key`
+    ```
+    (:ScalewaySecret)-[:ENCRYPTED_BY]->(:ScalewayKey)
     ```

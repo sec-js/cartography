@@ -17,11 +17,24 @@ PRJ -- RESOURCE --> SNAP(VolumeSnapshot)
 PRJ -- RESOURCE --> SG(SecurityGroup)
 PRJ -- RESOURCE --> SGR(SecurityGroupRule)
 PRJ -- RESOURCE --> BKT(ObjectStorageBucket)
+PRJ -- RESOURCE --> VPC(Vpc)
+PRJ -- RESOURCE --> PN(PrivateNetwork)
+PRJ -- RESOURCE --> SUB(Subnet)
+PRJ -- RESOURCE --> IP(IP)
+PRJ -- RESOURCE --> LB(LoadBalancer)
+PRJ -- RESOURCE --> FE(LBFrontend)
+PRJ -- RESOURCE --> BE(LBBackend)
 INS -- MOUNTS --> VOL
 INS -- MEMBER_OF_SCALEWAY_SECURITY_GROUP --> SG
 SGR -- MEMBER_OF_SCALEWAY_SECURITY_GROUP --> SG
 FIP -- IDENTIFIES --> INS
 VOL -- HAS --> SNAP
+VPC -- HAS --> PN
+PN -- HAS --> SUB
+SUB -- HAS --> IP
+LB -- HAS --> FE
+LB -- HAS --> BE
+FE -- ROUTES_TO --> BE
 USR -- MEMBER_OF --> GRP(ScalewayGroup)
 APIKEY(ScalewayApiKey) -- OWNED_BY --> USR
 APP -- MEMBER_OF --> GRP(ScalewayGroup)
@@ -88,7 +101,14 @@ Represents a Project in Scaleway. Projects are groupings of Scaleway resources.
         :ScalewayInstance,
         :ScalewaySecurityGroup,
         :ScalewaySecurityGroupRule,
-        :ScalewayObjectStorageBucket
+        :ScalewayObjectStorageBucket,
+        :ScalewayVpc,
+        :ScalewayPrivateNetwork,
+        :ScalewaySubnet,
+        :ScalewayIP,
+        :ScalewayLoadBalancer,
+        :ScalewayLBFrontend,
+        :ScalewayLBBackend
     )
     ```
 
@@ -558,4 +578,233 @@ An Object Storage bucket is an S3-compatible container for objects. Scaleway Obj
 - An `ObjectStorageBucket` belongs to a `Project`
     ```
     (:ScalewayProject)-[:RESOURCE]->(:ScalewayObjectStorageBucket)
+    ```
+
+### ScalewayVpc
+
+A VPC (Virtual Private Cloud) is a regional, isolated network that groups Private Networks.
+
+> **Ontology Mapping**: This node has the extra label `VirtualNetwork` to enable cross-platform queries for virtual networks across different systems (e.g., AWSVpc, GCPVpc, AzureVirtualNetwork).
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | VPC unique ID.                               |
+| name       | VPC name.                                    |
+| region     | Region the VPC lives in.                     |
+| tags       | Tags associated with the VPC.                |
+| is_default | True if it is the default VPC of the Project. |
+| private_network_count | Number of Private Networks in the VPC. |
+| routing_enabled | True if routing between Private Networks is enabled. |
+| custom_routes_propagation_enabled | True if custom routes are propagated. |
+| created_at | VPC creation date.                           |
+| updated_at | VPC last update date.                        |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `Vpc` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayVpc)
+    ```
+- A `Vpc` has `PrivateNetwork`
+    ```
+    (:ScalewayVpc)-[:HAS]->(:ScalewayPrivateNetwork)
+    ```
+
+### ScalewayPrivateNetwork
+
+A Private Network is a layer-2 network within a VPC that Instances and other resources attach to.
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Private Network unique ID.                   |
+| name       | Private Network name.                        |
+| region     | Region the Private Network lives in.         |
+| tags       | Tags associated with the Private Network.    |
+| vpc_id     | ID of the VPC the Private Network belongs to. |
+| dhcp_enabled | True if managed DHCP is enabled.           |
+| default_route_propagation_enabled | True if the default route is propagated. |
+| created_at | Private Network creation date.               |
+| updated_at | Private Network last update date.            |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `PrivateNetwork` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayPrivateNetwork)
+    ```
+- A `Vpc` has `PrivateNetwork`
+    ```
+    (:ScalewayVpc)-[:HAS]->(:ScalewayPrivateNetwork)
+    ```
+- A `PrivateNetwork` has `Subnet`
+    ```
+    (:ScalewayPrivateNetwork)-[:HAS]->(:ScalewaySubnet)
+    ```
+
+### ScalewaySubnet
+
+A Subnet is a CIDR block (IPv4 or IPv6) belonging to a Private Network.
+
+> **Ontology Mapping**: This node has the extra label `Subnet` to enable cross-platform queries for subnets across different systems (e.g., EC2Subnet, GCPSubnet, AzureSubnet).
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Subnet unique ID.                            |
+| subnet     | CIDR block of the subnet.                    |
+| private_network_id | ID of the Private Network the subnet belongs to. |
+| vpc_id     | ID of the VPC the subnet belongs to.         |
+| created_at | Subnet creation date.                        |
+| updated_at | Subnet last update date.                     |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `Subnet` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewaySubnet)
+    ```
+- A `PrivateNetwork` has `Subnet`
+    ```
+    (:ScalewayPrivateNetwork)-[:HAS]->(:ScalewaySubnet)
+    ```
+
+### ScalewayIP
+
+An IP is an IPAM-managed IP address (IPv4 or IPv6) allocated within a Private Network and optionally attached to a resource.
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | IP unique ID.                                |
+| address    | The IP address (CIDR notation).              |
+| is_ipv6    | True if the address is IPv6.                 |
+| tags       | Tags associated with the IP.                 |
+| region     | Region the IP lives in.                      |
+| zone       | Zone the IP lives in (when zonal).           |
+| source_private_network_id | ID of the Private Network the IP was booked in. |
+| source_subnet_id | ID of the subnet the IP was booked in.  |
+| source_vpc_id | ID of the VPC the IP was booked in.       |
+| resource_type | Type of resource the IP is attached to (e.g. `instance_private_nic`). |
+| resource_id | ID of the resource the IP is attached to.   |
+| resource_name | Name of the resource the IP is attached to. |
+| resource_mac_address | MAC address of the resource the IP is attached to. |
+| created_at | IP creation date.                            |
+| updated_at | IP last update date.                         |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- An `IP` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayIP)
+    ```
+- A `Subnet` has `IP`
+    ```
+    (:ScalewaySubnet)-[:HAS]->(:ScalewayIP)
+    ```
+
+### ScalewayLoadBalancer
+
+A Load Balancer distributes incoming traffic across backend servers. Its public IP(s) make it an internet-facing entry point.
+
+> **Ontology Mapping**: This node has the extra label `LoadBalancer` to enable cross-platform queries for load balancers across different systems (e.g., AWSLoadBalancerV2, GCPForwardingRule, AzureLoadBalancer).
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Load Balancer unique ID.                     |
+| name       | Load Balancer name.                          |
+| description | Load Balancer description.                  |
+| status     | Load Balancer status (e.g. `ready`).          |
+| type       | Load Balancer commercial type (e.g. `LB-S`). |
+| tags       | Tags associated with the Load Balancer.       |
+| frontend_count | Number of frontends.                      |
+| backend_count | Number of backends.                        |
+| private_network_count | Number of attached Private Networks. |
+| route_count | Number of routes.                            |
+| ssl_compatibility_level | SSL compatibility level.          |
+| ip_address | Primary public IP address (first entry of `ip_addresses`). |
+| ip_addresses | All public IP addresses of the Load Balancer. |
+| zone       | Zone the Load Balancer lives in.              |
+| region     | Region the Load Balancer lives in.            |
+| created_at | Load Balancer creation date.                  |
+| updated_at | Load Balancer last update date.               |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `LoadBalancer` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayLoadBalancer)
+    ```
+- A `LoadBalancer` has `LBFrontend` and `LBBackend`
+    ```
+    (:ScalewayLoadBalancer)-[:HAS]->(:ScalewayLBFrontend)
+    (:ScalewayLoadBalancer)-[:HAS]->(:ScalewayLBBackend)
+    ```
+
+### ScalewayLBFrontend
+
+A Frontend defines an inbound listener (port) on a Load Balancer and the backend it routes to.
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Frontend unique ID.                          |
+| name       | Frontend name.                               |
+| inbound_port | Port the frontend listens on.              |
+| certificate_ids | IDs of the TLS certificates attached.    |
+| enable_http3 | True if HTTP/3 is enabled.                  |
+| enable_access_logs | True if access logs are enabled.      |
+| timeout_client | Client inactivity timeout.                |
+| connection_rate_limit | Per-source connection rate limit.   |
+| created_at | Frontend creation date.                      |
+| updated_at | Frontend last update date.                   |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `LBFrontend` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayLBFrontend)
+    ```
+- A `LoadBalancer` has `LBFrontend`
+    ```
+    (:ScalewayLoadBalancer)-[:HAS]->(:ScalewayLBFrontend)
+    ```
+- A `LBFrontend` routes to a `LBBackend`
+    ```
+    (:ScalewayLBFrontend)-[:ROUTES_TO]->(:ScalewayLBBackend)
+    ```
+
+### ScalewayLBBackend
+
+A Backend defines a pool of servers and the forwarding / health-check configuration a Load Balancer uses to reach them.
+
+| Field      | Description                                  |
+|------------|----------------------------------------------|
+| id         | Backend unique ID.                           |
+| name       | Backend name.                                |
+| forward_protocol | Protocol used to forward traffic (`tcp`, `http`). |
+| forward_port | Port traffic is forwarded to.              |
+| forward_port_algorithm | Load-balancing algorithm (e.g. `roundrobin`). |
+| sticky_sessions | Sticky-session mode.                     |
+| on_marked_down_action | Action when a server is marked down. |
+| proxy_protocol | Proxy protocol mode.                      |
+| pool       | List of backend server IP addresses.          |
+| health_check_port | Port used for health checks.           |
+| health_check_delay | Delay between health checks.          |
+| health_check_max_retries | Max health-check retries before marking down. |
+| timeout_server | Server inactivity timeout.                |
+| timeout_connect | Connection timeout.                      |
+| ssl_bridging | True if SSL bridging to the backend is enabled. |
+| created_at | Backend creation date.                       |
+| updated_at | Backend last update date.                    |
+| lastupdated | Timestamp of the last update                 |
+
+#### Relationships
+- A `LBBackend` belongs to a `Project`
+    ```
+    (:ScalewayProject)-[:RESOURCE]->(:ScalewayLBBackend)
+    ```
+- A `LoadBalancer` has `LBBackend`
+    ```
+    (:ScalewayLoadBalancer)-[:HAS]->(:ScalewayLBBackend)
+    ```
+- A `LBFrontend` routes to a `LBBackend`
+    ```
+    (:ScalewayLBFrontend)-[:ROUTES_TO]->(:ScalewayLBBackend)
     ```

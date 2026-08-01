@@ -15,16 +15,33 @@ from cartography.models.ontology.labels import SECRET
 
 @dataclass(frozen=True)
 class ModalSecretNodeProperties(CartographyNodeProperties):
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id", description="Secret ID, e.g. `st-poEHPwc7kwkkLwrnaVPjTn`."
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    created_at: PropertyRef = PropertyRef("created_at")
+    name: PropertyRef = PropertyRef(
+        "name", extra_index=True, description="Secret name."
+    )
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the secret was created."
+    )
     # Modal aggregates usage into a single timestamp. It is the only observable signal that a
     # secret is still in use, since which workloads consume it is not readable (see below).
-    last_used_at: PropertyRef = PropertyRef("last_used_at")
+    last_used_at: PropertyRef = PropertyRef(
+        "last_used_at",
+        description="When the secret was last read by a workload. Null if never.",
+    )
     # Workspace username of the creator, not an email.
-    created_by: PropertyRef = PropertyRef("created_by", extra_index=True)
-    environment_name: PropertyRef = PropertyRef("environment_name", extra_index=True)
+    created_by: PropertyRef = PropertyRef(
+        "created_by",
+        extra_index=True,
+        description="Workspace username of the creator, not an email.",
+    )
+    environment_name: PropertyRef = PropertyRef(
+        "environment_name",
+        extra_index=True,
+        description="Name of the owning environment.",
+    )
     # NOTE: no property here holds a secret *value*, and none can. Modal exposes no read RPC
     # that returns secret contents at all, so there is nothing to ingest even by accident.
 
@@ -77,6 +94,8 @@ class ModalSecretToCreatorRel(CartographyRelSchema):
 # consume a given secret is not obtainable from the API and can only be determined from
 # source code.
 class ModalSecretSchema(CartographyNodeSchema):
+    """Represents a Modal secret. Only metadata is ingested. **Modal returns no secret values through any read API**, so Cartography cannot and does not store them. There is deliberately no `USES_SECRET` edge either: `Function.secret_ids` is write-only, so which apps or functions consume a given secret is not obtainable and can only be determined from source code. `last_used_at` is the single aggregate signal that a secret is still in use. `CREATED_BY` is best-effort: Modal reports the creator only as a workspace username, which Cartography resolves to a `ModalUser` id against the members of the workspace being synced. Matching on that id rather than on a display name is what keeps the edge from crossing tenant boundaries, since display names are not globally unique. Absent when the creator is no longer a member."""
+
     label: str = "ModalSecret"
     properties: ModalSecretNodeProperties = ModalSecretNodeProperties()
     sub_resource_relationship: ModalSecretToEnvironmentRel = (

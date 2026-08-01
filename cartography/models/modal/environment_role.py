@@ -17,11 +17,15 @@ from cartography.models.ontology.labels import PERMISSION_ROLE
 @dataclass(frozen=True)
 class ModalEnvironmentRoleNodeProperties(CartographyNodeProperties):
     # Modal has no role object, so the id is synthesised as "<environment_id>/<role>".
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id", description="Synthesised as `<environment_id>/<role>`."
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
     # viewer, contributor or no-access (normalised from the ENVIRONMENT_ROLE_* enum).
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    scope: PropertyRef = PropertyRef("scope")
+    name: PropertyRef = PropertyRef(
+        "name", extra_index=True, description="`viewer`, `contributor` or `no-access`."
+    )
+    scope: PropertyRef = PropertyRef("scope", description="Always `environment`.")
 
 
 @dataclass(frozen=True)
@@ -49,6 +53,8 @@ class ModalEnvironmentRoleToEnvironmentRel(CartographyRelSchema):
 # what lets Modal RBAC participate in the cross-provider HAS_ROLE rules, since
 # ONTOLOGY_REL_CONSTRAINTS already blesses UserAccount/ServiceAccount -> PermissionRole.
 class ModalEnvironmentRoleSchema(CartographyNodeSchema):
+    """Represents one of Modal's builtin per-environment roles (`viewer`, `contributor`, `no-access`). Derived from the role enum; id is synthesised as `<environment_id>/<role>`."""
+
     label: str = "ModalEnvironmentRole"
     properties: ModalEnvironmentRoleNodeProperties = (
         ModalEnvironmentRoleNodeProperties()

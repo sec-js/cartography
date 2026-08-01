@@ -13,14 +13,20 @@ from cartography.models.core.relationships import TargetNodeMatcher
 
 @dataclass(frozen=True)
 class ModalDomainNodeProperties(CartographyNodeProperties):
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef("id", description="Domain ID.")
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
-    domain_name: PropertyRef = PropertyRef("domain_name", extra_index=True)
-    created_at: PropertyRef = PropertyRef("created_at")
+    domain_name: PropertyRef = PropertyRef(
+        "domain_name", extra_index=True, description="The custom hostname."
+    )
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the domain was added."
+    )
     # Raw CERTIFICATE_STATUS_* value. A domain stuck PENDING or gone FAILED/REVOKED is serving
     # traffic without a valid certificate, which is why this is indexed.
     certificate_status: PropertyRef = PropertyRef(
-        "certificate_status", extra_index=True
+        "certificate_status",
+        extra_index=True,
+        description="Raw `CERTIFICATE_STATUS_*` value. A domain stuck `PENDING`, or `FAILED`/`REVOKED`, is serving without a valid certificate.",
     )
 
 
@@ -55,6 +61,8 @@ class ModalDomainToWorkspaceRel(CartographyRelSchema):
 # the adapter treats as "no domains" rather than an error, so this node type is simply absent
 # there.
 class ModalDomainSchema(CartographyNodeSchema):
+    """Represents a custom domain attached to a Modal workspace, used to serve web endpoints on your own hostname. **Workspace-scoped**, not environment-scoped: the underlying API call is workspace-wide. Custom domains require a paid Modal add-on. On workspaces without it the API answers `UNIMPLEMENTED`, which Cartography treats as \"no domains\" rather than an error, so this node type is simply absent there. This node carries no ontology label: `DNSZone` would be wrong (a hostname is not a zone) and `Certificate` would be a one-field stub, since Modal exposes only a status with no issuer or expiry."""
+
     label: str = "ModalDomain"
     properties: ModalDomainNodeProperties = ModalDomainNodeProperties()
     sub_resource_relationship: ModalDomainToWorkspaceRel = ModalDomainToWorkspaceRel()
@@ -64,13 +72,22 @@ class ModalDomainSchema(CartographyNodeSchema):
 class ModalDomainDNSRecordNodeProperties(CartographyNodeProperties):
     # Modal gives these records no id, so it is synthesised as
     # "<domain_id>/<type>/<name>", which is unique per domain.
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id",
+        description="Synthesised as `<domain_id>/<type>/<name>`; Modal gives these records no id.",
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
     # Raw DNS_RECORD_TYPE_* value: A, TXT or CNAME.
-    type: PropertyRef = PropertyRef("type")
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    value: PropertyRef = PropertyRef("value")
-    domain_id: PropertyRef = PropertyRef("domain_id")
+    type: PropertyRef = PropertyRef(
+        "type", description="Raw `DNS_RECORD_TYPE_*` value: A, TXT or CNAME."
+    )
+    name: PropertyRef = PropertyRef(
+        "name", extra_index=True, description="Record name."
+    )
+    value: PropertyRef = PropertyRef("value", description="Record value.")
+    domain_id: PropertyRef = PropertyRef(
+        "domain_id", description="ID of the owning domain."
+    )
 
 
 @dataclass(frozen=True)
@@ -116,6 +133,8 @@ class ModalDomainToRecordRel(CartographyRelSchema):
 # configuration, not DNS state observed in the wild. Labelling them would feed the DNS record
 # linking analysis entries that may not exist in any zone, producing phantom resolution paths.
 class ModalDomainDNSRecordSchema(CartographyNodeSchema):
+    """Represents a DNS record Modal asks you to create in order to validate a custom domain. Deliberately **not** labelled `DNSRecord`. These are records Modal *requests*, meaning desired configuration, not DNS state observed in the wild. Labelling them would feed the DNS record linking analysis entries that may not exist in any zone, producing phantom resolution paths."""
+
     label: str = "ModalDomainDNSRecord"
     properties: ModalDomainDNSRecordNodeProperties = (
         ModalDomainDNSRecordNodeProperties()

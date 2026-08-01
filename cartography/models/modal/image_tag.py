@@ -16,14 +16,29 @@ class ModalImageTagNodeProperties(CartographyNodeProperties):
     # Modal's tag listing has no id of its own, so the reference is synthesised as
     # "<image_id>:<tag>". One node per tag, following the same fan-out as AWS ECR
     # (`repo_uri:tag`), GitHub GHCR (`package_uri:tag`) and Scaleway.
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id",
+        description="Synthesised as `<image_id>:<tag>`; Modal gives tags no id, and exposes no registry URI to use as the repository part.",
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
-    tag: PropertyRef = PropertyRef("tag", extra_index=True)
-    image_id: PropertyRef = PropertyRef("image_id", extra_index=True)
-    revision_id: PropertyRef = PropertyRef("revision_id")
-    created_at: PropertyRef = PropertyRef("created_at")
-    updated_at: PropertyRef = PropertyRef("updated_at")
-    environment_name: PropertyRef = PropertyRef("environment_name", extra_index=True)
+    tag: PropertyRef = PropertyRef("tag", extra_index=True, description="The tag.")
+    image_id: PropertyRef = PropertyRef(
+        "image_id", extra_index=True, description="ID of the image it points at."
+    )
+    revision_id: PropertyRef = PropertyRef(
+        "revision_id", description="Revision of the tag."
+    )
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the tag was created."
+    )
+    updated_at: PropertyRef = PropertyRef(
+        "updated_at", description="When the tag was last updated."
+    )
+    environment_name: PropertyRef = PropertyRef(
+        "environment_name",
+        extra_index=True,
+        description="Name of the owning environment.",
+    )
 
 
 @dataclass(frozen=True)
@@ -76,6 +91,8 @@ class ModalImageTagToImageRel(CartographyRelSchema):
 # pointer in every cross-provider image query. The structural shape is kept; only the ontology
 # claim is withheld.
 class ModalImageTagSchema(CartographyNodeSchema):
+    """Represents a named pointer to a Modal image. Several tags can point at the same image, which is why they are separate nodes: keying on the image alone made every tag but the last vanish on load. This mirrors AWS ECR, GitHub GHCR, GitLab, GCP Artifact Registry and Scaleway, which all fan out one tag node per `(repository, tag)` pair. Deliberately **not** labelled with the ontology `ImageTag`, for the same reason `ModalImage` is not labelled `Image`. That pair exists so the supply-chain matchers can traverse `(:Image)<-[:IMAGE]-(:ImageTag)<-[:REPO_IMAGE]-(:ContainerRegistry)` and join on a digest. Modal's tag listing returns no digest, so a labelled Modal tag would be a dangling pointer in every cross-provider image query. The structural shape is kept; only the ontology claim is withheld."""
+
     label: str = "ModalImageTag"
     properties: ModalImageTagNodeProperties = ModalImageTagNodeProperties()
     sub_resource_relationship: ModalImageTagToEnvironmentRel = (

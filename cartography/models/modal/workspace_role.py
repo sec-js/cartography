@@ -15,11 +15,15 @@ from cartography.models.ontology.labels import PERMISSION_ROLE
 @dataclass(frozen=True)
 class ModalWorkspaceRoleNodeProperties(CartographyNodeProperties):
     # Modal has no role object, so the id is synthesised as "<workspace_id>/<role>".
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id", description="Synthesised as `<workspace_id>/<role>`."
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
     # One of member, manager, owner (normalised from the MEMBER_ROLE_* enum).
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    scope: PropertyRef = PropertyRef("scope")
+    name: PropertyRef = PropertyRef(
+        "name", extra_index=True, description="`member`, `manager` or `owner`."
+    )
+    scope: PropertyRef = PropertyRef("scope", description="Always `workspace`.")
 
 
 @dataclass(frozen=True)
@@ -47,6 +51,8 @@ class ModalWorkspaceRoleToWorkspaceRel(CartographyRelSchema):
 # because ONTOLOGY_REL_CONSTRAINTS already blesses UserAccount -> PermissionRole as
 # HAS_ROLE, so modelling them this way puts Modal RBAC into cross-provider rules.
 class ModalWorkspaceRoleSchema(CartographyNodeSchema):
+    """Represents one of Modal's builtin workspace roles (`member`, `manager`, `owner`). Modal has no role API object, so these nodes are derived from the role enum and their id is synthesised as `<workspace_id>/<role>`. Modelling roles as nodes rather than as a property on the member is what lets Modal RBAC participate in cross-provider `HAS_ROLE` rules."""
+
     label: str = "ModalWorkspaceRole"
     properties: ModalWorkspaceRoleNodeProperties = ModalWorkspaceRoleNodeProperties()
     sub_resource_relationship: ModalWorkspaceRoleToWorkspaceRel = (

@@ -15,12 +15,20 @@ from cartography.models.ontology.labels import SERVICE_ACCOUNT
 
 @dataclass(frozen=True)
 class ModalServiceUserNodeProperties(CartographyNodeProperties):
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef("id", description="Service user ID.")
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    created_at: PropertyRef = PropertyRef("created_at")
+    name: PropertyRef = PropertyRef(
+        "name", extra_index=True, description="Service user name."
+    )
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the service user was created."
+    )
     # Modal reports the creator as a workspace *username*, not an email.
-    created_by: PropertyRef = PropertyRef("created_by", extra_index=True)
+    created_by: PropertyRef = PropertyRef(
+        "created_by",
+        extra_index=True,
+        description="Workspace username of the creator, not an email.",
+    )
 
 
 @dataclass(frozen=True)
@@ -69,6 +77,8 @@ class ModalServiceUserToCreatorRel(CartographyRelSchema):
 # recommended way to run Cartography against Modal, since Modal has no read-only token
 # scope and a personal token carries all of its owner's privileges.
 class ModalServiceUserSchema(CartographyNodeSchema):
+    """Represents a Modal service user: a machine identity that owns exactly one API token. This is the recommended identity to run Cartography under. was created by a member. `CREATED_BY` is best-effort: Modal reports the creator only as a workspace username, which the transform resolves against this workspace's members to a `ModalUser` id. The edge is simply absent when no member matches."""
+
     label: str = "ModalServiceUser"
     properties: ModalServiceUserNodeProperties = ModalServiceUserNodeProperties()
     sub_resource_relationship: ModalServiceUserToWorkspaceRel = (

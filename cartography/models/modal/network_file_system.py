@@ -14,14 +14,26 @@ from cartography.models.ontology.labels import FILE_STORAGE
 
 @dataclass(frozen=True)
 class ModalNetworkFileSystemNodeProperties(CartographyNodeProperties):
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id", description="Share ID, e.g. `sv-1AsDfGhJkLzXcVbNmQwErT`."
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    created_at: PropertyRef = PropertyRef("created_at")
+    name: PropertyRef = PropertyRef("name", extra_index=True, description="Share name.")
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the share was created."
+    )
     # Raw CLOUD_PROVIDER_* value: AWS, GCP, OCI or AUTO. This is the provider the share is
     # backed by, not a region.
-    cloud_provider: PropertyRef = PropertyRef("cloud_provider", extra_index=True)
-    environment_name: PropertyRef = PropertyRef("environment_name", extra_index=True)
+    cloud_provider: PropertyRef = PropertyRef(
+        "cloud_provider",
+        extra_index=True,
+        description="Raw `CLOUD_PROVIDER_*` value: AWS, GCP, OCI or AUTO. This names a provider, not a region, which is why it is not mapped onto the ontology `location` field.",
+    )
+    environment_name: PropertyRef = PropertyRef(
+        "environment_name",
+        extra_index=True,
+        description="Name of the owning environment.",
+    )
 
 
 @dataclass(frozen=True)
@@ -48,6 +60,8 @@ class ModalNetworkFileSystemToEnvironmentRel(CartographyRelSchema):
 # Volume. Still enumerated because existing workspaces have them, and an unnoticed legacy
 # share holding data is exactly the kind of thing an inventory should surface.
 class ModalNetworkFileSystemSchema(CartographyNodeSchema):
+    """Represents a Modal network file system: the older shared-filesystem primitive, superseded by Volume. Still inventoried because existing workspaces have them, and an unnoticed legacy share holding data is exactly what an inventory should surface."""
+
     label: str = "ModalNetworkFileSystem"
     properties: ModalNetworkFileSystemNodeProperties = (
         ModalNetworkFileSystemNodeProperties()

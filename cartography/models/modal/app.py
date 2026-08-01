@@ -14,19 +14,38 @@ from cartography.models.ontology.labels import COMPUTE_SERVICE
 
 @dataclass(frozen=True)
 class ModalAppNodeProperties(CartographyNodeProperties):
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id", description="App ID, e.g. `ap-7fkFcwJ6OVd57wM78ERlH1`."
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
     # Ephemeral apps (a bare `modal run`) have no name; only deployed apps do. The
     # description is then the sole human label, which is why the ontology mapping coalesces
     # the two.
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    description: PropertyRef = PropertyRef("description")
+    name: PropertyRef = PropertyRef(
+        "name", extra_index=True, description="App name. Null for an ephemeral app."
+    )
+    description: PropertyRef = PropertyRef(
+        "description",
+        description="App description. The only human label for an unnamed app.",
+    )
     # Raw APP_STATE_* value. Normalised into the ontology's canonical set separately.
-    state: PropertyRef = PropertyRef("state", extra_index=True)
-    created_at: PropertyRef = PropertyRef("created_at")
-    stopped_at: PropertyRef = PropertyRef("stopped_at")
-    n_running_tasks: PropertyRef = PropertyRef("n_running_tasks")
-    environment_name: PropertyRef = PropertyRef("environment_name", extra_index=True)
+    state: PropertyRef = PropertyRef(
+        "state", extra_index=True, description="Raw `APP_STATE_*` value."
+    )
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the app was created."
+    )
+    stopped_at: PropertyRef = PropertyRef(
+        "stopped_at", description="When the app was stopped, if it was."
+    )
+    n_running_tasks: PropertyRef = PropertyRef(
+        "n_running_tasks", description="Number of tasks currently running."
+    )
+    environment_name: PropertyRef = PropertyRef(
+        "environment_name",
+        extra_index=True,
+        description="Name of the owning environment.",
+    )
 
 
 @dataclass(frozen=True)
@@ -53,6 +72,8 @@ class ModalAppToEnvironmentRel(CartographyRelSchema):
 # is the ComputeService of the Modal workload chain, so every child workload points at it
 # with the canonical WORKLOAD_PARENT edge.
 class ModalAppSchema(CartographyNodeSchema):
+    """Represents a Modal app: the deployment unit that owns functions, classes, sandboxes and tasks. Enumerated from the private `AppList` RPC, since Modal exposes no public app listing. An ephemeral app (a bare `modal run`) has no name, only a description; the ontology `name` coalesces the two. `_ont_status` normalises `APP_STATE_*` into the shared set, where a stopped app maps to `deleting` (the same choice made for AWS ECS `INACTIVE`), because the canonical set has no `stopped`."""
+
     label: str = "ModalApp"
     properties: ModalAppNodeProperties = ModalAppNodeProperties()
     sub_resource_relationship: ModalAppToEnvironmentRel = ModalAppToEnvironmentRel()

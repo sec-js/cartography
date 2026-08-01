@@ -16,14 +16,24 @@ from cartography.models.ontology.labels import API_KEY
 class ModalProxyTokenNodeProperties(CartographyNodeProperties):
     # The `wk-` proxy token id. Proxy tokens are a different credential family from API
     # tokens (`ak-`/`as-`) and cannot be interchanged with them.
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id", description="Proxy token ID, e.g. `wk-5TgBnHyUjMkIoLpQaZwSxE`."
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
-    token_id: PropertyRef = PropertyRef("token_id", extra_index=True)
-    created_at: PropertyRef = PropertyRef("created_at")
+    token_id: PropertyRef = PropertyRef(
+        "token_id", extra_index=True, description="Same value, indexed."
+    )
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the token was created."
+    )
     # An unscoped proxy token authenticates against EVERY proxy-auth-protected web
     # endpoint in the workspace, so this flag is the blast-radius signal. Indexed for that
     # reason.
-    scoped: PropertyRef = PropertyRef("scoped", extra_index=True)
+    scoped: PropertyRef = PropertyRef(
+        "scoped",
+        extra_index=True,
+        description="Whether the token is restricted to specific environments. An unscoped token authenticates against every proxy-auth-protected endpoint in the workspace, so this is the blast-radius signal.",
+    )
 
 
 @dataclass(frozen=True)
@@ -50,6 +60,8 @@ class ModalProxyTokenToWorkspaceRel(CartographyRelSchema):
 # Cartography can enumerate the tokens but NOT which endpoints require them:
 # requires_proxy_auth is write-only in Modal's API.
 class ModalProxyTokenSchema(CartographyNodeSchema):
+    """Represents a Modal proxy auth token (`wk-`), used to authenticate to web endpoints declared with proxy auth. This is a different credential family from API tokens and the two cannot be interchanged. Cartography can enumerate proxy tokens but **not** which endpoints require them: `requires_proxy_auth` is write-only in Modal's API."""
+
     label: str = "ModalProxyToken"
     properties: ModalProxyTokenNodeProperties = ModalProxyTokenNodeProperties()
     sub_resource_relationship: ModalProxyTokenToWorkspaceRel = (

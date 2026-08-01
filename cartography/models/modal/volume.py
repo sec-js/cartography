@@ -15,15 +15,31 @@ from cartography.models.ontology.labels import FILE_STORAGE
 
 @dataclass(frozen=True)
 class ModalVolumeNodeProperties(CartographyNodeProperties):
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id", description="Volume ID, e.g. `vo-Fq2DSfh5sU2E9kQ6R9oDrj`."
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    created_at: PropertyRef = PropertyRef("created_at")
+    name: PropertyRef = PropertyRef(
+        "name", extra_index=True, description="Volume name."
+    )
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the volume was created."
+    )
     # Workspace username of the creator, not an email.
-    created_by: PropertyRef = PropertyRef("created_by", extra_index=True)
+    created_by: PropertyRef = PropertyRef(
+        "created_by", extra_index=True, description="Workspace username of the creator."
+    )
     # Raw VOLUME_FS_VERSION_* value. V1 volumes are the older filesystem generation.
-    version: PropertyRef = PropertyRef("version", extra_index=True)
-    environment_name: PropertyRef = PropertyRef("environment_name", extra_index=True)
+    version: PropertyRef = PropertyRef(
+        "version",
+        extra_index=True,
+        description="Raw `VOLUME_FS_VERSION_*` value. V1 is the older filesystem generation.",
+    )
+    environment_name: PropertyRef = PropertyRef(
+        "environment_name",
+        extra_index=True,
+        description="Name of the owning environment.",
+    )
 
 
 @dataclass(frozen=True)
@@ -73,6 +89,8 @@ class ModalVolumeToCreatorRel(CartographyRelSchema):
 # Which workloads mount it is NOT graphable: `Function.volume_mounts` is write-only in Modal's
 # API, the same limitation as secrets.
 class ModalVolumeSchema(CartographyNodeSchema):
+    """Represents a Modal volume: a persistent distributed filesystem that many containers can mount at once. Which workloads mount it is **not** graphable: `Function.volume_mounts` is write-only, the same limitation as secrets."""
+
     label: str = "ModalVolume"
     properties: ModalVolumeNodeProperties = ModalVolumeNodeProperties()
     sub_resource_relationship: ModalVolumeToEnvironmentRel = (

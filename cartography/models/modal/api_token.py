@@ -18,14 +18,27 @@ class ModalApiTokenNodeProperties(CartographyNodeProperties):
     # The `ak-` token id. It is the credential's stable identifier and is safe to store:
     # the token *secret* is only ever shown once, at creation, and is never returned by any
     # read RPC.
-    id: PropertyRef = PropertyRef("id")
+    id: PropertyRef = PropertyRef(
+        "id", description="Token ID, e.g. `ak-4pE5t96YiNM0svmOjIet7z`."
+    )
     lastupdated: PropertyRef = PropertyRef("lastupdated", set_in_kwargs=True)
-    token_id: PropertyRef = PropertyRef("token_id", extra_index=True)
-    name: PropertyRef = PropertyRef("name", extra_index=True)
-    created_at: PropertyRef = PropertyRef("created_at")
+    token_id: PropertyRef = PropertyRef(
+        "token_id",
+        extra_index=True,
+        description="Same value, indexed for lookups by credential.",
+    )
+    name: PropertyRef = PropertyRef(
+        "name", extra_index=True, description="Name of the owning service user."
+    )
+    created_at: PropertyRef = PropertyRef(
+        "created_at", description="When the token was created."
+    )
     # Drives stale-credential detection. Modal tokens never expire, so last use is the
     # only signal that a token is dormant.
-    last_used_at: PropertyRef = PropertyRef("last_used_at")
+    last_used_at: PropertyRef = PropertyRef(
+        "last_used_at",
+        description="When the token was last used. Modal tokens do not expire, so this is the only signal that one is dormant.",
+    )
 
 
 @dataclass(frozen=True)
@@ -69,6 +82,8 @@ class ModalApiTokenToServiceUserRel(CartographyRelSchema):
 
 @dataclass(frozen=True)
 class ModalApiTokenSchema(CartographyNodeSchema):
+    """Represents a Modal API token (`ak-`) belonging to a service user. Only the token id is stored; the token secret is shown once at creation and is never returned by any read API."""
+
     label: str = "ModalApiToken"
     properties: ModalApiTokenNodeProperties = ModalApiTokenNodeProperties()
     sub_resource_relationship: ModalApiTokenToWorkspaceRel = (

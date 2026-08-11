@@ -144,6 +144,9 @@ TOP_LEVEL_MODULES: OrderedDict[str, Callable[..., None]] = OrderedDict(
             "cartography.intel.circleci", "start_circleci_ingestion"
         ),
         "modal": _LazyStage("cartography.intel.modal", "start_modal_ingestion"),
+        "miradore": _LazyStage(
+            "cartography.intel.miradore", "start_miradore_ingestion"
+        ),
         # Runs after the cloud providers so that stages, external volumes and
         # integrations can attach to the S3 / GCS / Azure resources and IAM roles
         # they point at on the first sync rather than the next one.

@@ -28,6 +28,15 @@ _SEMGREP_SEVERITY = {
     "CRITICAL": "critical",
 }
 
+# BBOT finding severity
+_BBOT_SEVERITY = {
+    "INFO": "info",
+    "LOW": "low",
+    "MEDIUM": "medium",
+    "HIGH": "high",
+    "CRITICAL": "critical",
+}
+
 # Socket.dev alert severity
 _SOCKETDEV_SEVERITY = {
     "low": "low",
@@ -65,6 +74,28 @@ _SOCKETDEV_STATUS = {
     "open": "open",
     "cleared": "ignored",
 }
+
+bbot_mapping = OntologyMapping(
+    module_name="bbot",
+    nodes=[
+        OntologyNodeMapping(
+            node_label="BbotFinding",
+            fields=[
+                OntologyFieldMapping(
+                    ontology_field="title",
+                    node_field="finding_name",
+                    required=True,
+                ),
+                OntologyFieldMapping(
+                    ontology_field="severity",
+                    node_field="severity",
+                    special_handling="mapping",
+                    extra={"map": _BBOT_SEVERITY},
+                ),
+            ],
+        ),
+    ],
+)
 
 # Wiz issue and finding severity/status.
 _WIZ_SEVERITY = {
@@ -390,6 +421,7 @@ supabase_mapping = OntologyMapping(
 )
 
 SECURITY_ISSUES_ONTOLOGY_MAPPING: dict[str, OntologyMapping] = {
+    "bbot": bbot_mapping,
     "aws": aws_mapping,
     "semgrep": semgrep_mapping,
     "socketdev": socketdev_mapping,

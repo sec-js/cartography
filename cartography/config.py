@@ -514,6 +514,12 @@ class Config:
     :param zizmor_source: Report source locator for the Zizmor repository mapping file.
         Accepts a local file, s3://bucket/key, gs://bucket/object, or
         azblob://account/container/blob. Optional.
+    :type zoom_account_id: str
+    :param zoom_account_id: Zoom account ID for server-to-server OAuth. Optional.
+    :type zoom_client_id: str
+    :param zoom_client_id: Zoom server-to-server OAuth client ID. Optional.
+    :type zoom_client_secret: str
+    :param zoom_client_secret: Zoom server-to-server OAuth client secret. Optional.
     :type jumpcloud_api_key: str
     :param jumpcloud_api_key: JumpCloud API key for authentication. Optional.
     :type jumpcloud_org_id: str
@@ -752,6 +758,9 @@ class Config:
         orca_api_endpoint=None,
         orca_api_token=None,
         microsoft_delegated_auth=False,
+        zoom_account_id=None,
+        zoom_client_id=None,
+        zoom_client_secret=None,
     ):
         self.neo4j_uri = neo4j_uri
         self.neo4j_user = neo4j_user
@@ -1032,6 +1041,9 @@ class Config:
         self.zizmor_source = zizmor_source
         self.ubuntu_security_enabled = ubuntu_security_enabled
         self.ubuntu_security_api_url = ubuntu_security_api_url
+        self.zoom_account_id = zoom_account_id
+        self.zoom_client_id = zoom_client_id
+        self.zoom_client_secret = zoom_client_secret
         self.jumpcloud_api_key = jumpcloud_api_key
         self.jumpcloud_org_id = jumpcloud_org_id
         self.socketdev_token = socketdev_token
